@@ -106,6 +106,4 @@ RunService.RenderStepped:Connect(function()
 		local camCF = camera.CFrame
 		local aimCF = CFrame.new(camCF.Position, target.Position)
 		camera.CFrame = camCF:Lerp(aimCF, SMOOTHNESS)
-	end
-end)
 

@@ -1,0 +1,111 @@
+MainLoader.lua
+-- CHEAT MENU + AIMBOT (OFICIAL DO JOGO)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+local camera = workspace.CurrentCamera
+
+-- CONFIG
+local AIM_FOV = 150
+local SMOOTHNESS = 0.15
+local TOGGLE_MENU_KEY = Enum.KeyCode.RightShift
+
+local aimbotEnabled = false
+local menuOpen = true
+
+-- ================= GUI =================
+local gui = Instance.new("ScreenGui")
+gui.Name = "CheatMenu"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 240, 0, 160)
+frame.Position = UDim2.new(0.5, -120, 0.5, -80)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 32)
+title.Text = "CHEAT MENU"
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+title.Parent = frame
+
+-- BOTÃO AIMBOT
+local aimbotBtn = Instance.new("TextButton")
+aimbotBtn.Size = UDim2.new(0.9, 0, 0, 40)
+aimbotBtn.Position = UDim2.new(0.05, 0, 0, 55)
+aimbotBtn.Text = "AIMBOT: OFF"
+aimbotBtn.BackgroundColor3 = Color3.fromRGB(170, 50, 50)
+aimbotBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+aimbotBtn.Font = Enum.Font.Gotham
+aimbotBtn.TextSize = 14
+aimbotBtn.Parent = frame
+
+Instance.new("UICorner", aimbotBtn).CornerRadius = UDim.new(0, 8)
+
+aimbotBtn.MouseButton1Click:Connect(function()
+	aimbotEnabled = not aimbotEnabled
+	if aimbotEnabled then
+		aimbotBtn.Text = "AIMBOT: ON"
+		aimbotBtn.BackgroundColor3 = Color3.fromRGB(50, 170, 80)
+	else
+		aimbotBtn.Text = "AIMBOT: OFF"
+		aimbotBtn.BackgroundColor3 = Color3.fromRGB(170, 50, 50)
+	end
+end)
+
+-- ABRIR / FECHAR MENU
+UserInputService.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == TOGGLE_MENU_KEY then
+		menuOpen = not menuOpen
+		frame.Visible = menuOpen
+	end
+end)
+
+-- ================= AIMBOT =================
+local function getClosestTarget()
+	local closest = nil
+	local shortest = AIM_FOV
+
+	for _, plr in pairs(Players:GetPlayers()) do
+		if plr ~= player and plr.Character and plr.Character:FindFirstChild("Head") then
+			local head = plr.Character.Head
+			local pos, visible = camera:WorldToViewportPoint(head.Position)
+
+			if visible then
+				local dist = (Vector2.new(pos.X, pos.Y) -
+					Vector2.new(mouse.X, mouse.Y)).Magnitude
+
+				if dist < shortest then
+					shortest = dist
+					closest = head
+				end
+			end
+		end
+	end
+	return closest
+end
+
+RunService.RenderStepped:Connect(function()
+	if not aimbotEnabled then return end
+
+	local target = getClosestTarget()
+	if target then
+		local camCF = camera.CFrame
+		local aimCF = CFrame.new(camCF.Position, target.Position)
+		camera.CFrame = camCF:Lerp(aimCF, SMOOTHNESS)
+	end
+end)
+
